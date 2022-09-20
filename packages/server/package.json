@@ -1,0 +1,17 @@
+{
+  "name": "@gameroom-js/server",
+  "version": "0.0.1",
+  "description": "A simply library for creating socketed multiplayer game rooms.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jackson Bierfeldt",
+  "license": "ISC",
+  "dependencies": {
+    "nanoid": "^4.0.0",
+    "socket.io": "^4.5.2",
+    "typescript": "^4.8.3"
+  }
+}
