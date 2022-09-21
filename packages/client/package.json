@@ -1,15 +1,57 @@
 {
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build --format cjs,esm,umd --target web",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
   "name": "@gameroom-js/client",
-  "version": "0.0.1",
-  "description": "A simply library for creating socketed multiplayer game rooms.",
-  "input": "./src/index.ts",
-  "main": "./build/index.js",
-  "module": "./build/index.mjs",
-  "typings": "./build/index.d.ts",
-  "scripts": {"build": "tsc"},
-  "type": "module",
   "author": "Jackson Bierfeldt",
-  "license": "ISC",
+  "module": "dist/cli.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/client.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/client.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.18.6",
+    "@size-limit/preset-small-lib": "^8.1.0",
+    "husky": "^8.0.1",
+    "size-limit": "^8.1.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.4.0",
+    "typescript": "^3.9.10"
+  },
   "dependencies": {
     "socket.io-client": "^4.5.2"
   }

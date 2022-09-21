@@ -1,11 +1,11 @@
-interface ServerToClientEvents {
+export interface ServerToClientEvents {
   updateRoomState: (data: unknown) => void;
   updateGameState: (data: unknown) => void;
   test: (data: string) => void;
   INITIATE_JOIN: () => void;
 }
 
-interface ClientToServerEvents {
+export interface ClientToServerEvents {
   message: (a?: GameMessage | ProtocolMessage) => void;
 }
 
@@ -31,5 +31,3 @@ type TransferMessage = {
     m: string;
   };
 };
-
-export { ServerToClientEvents, ClientToServerEvents };

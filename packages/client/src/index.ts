@@ -1,1 +1,1 @@
-export { SocketConnection } from "./Client";
+export { SocketConnection } from './SocketConnection';
