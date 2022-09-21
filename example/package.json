@@ -5,13 +5,14 @@
   "main": "./src/index.js",
   "type": "module",
   "scripts": {
-    "dev": "webpack && ts-node src/Server.ts",
+    "dev": "webpack && ts-node src/server/Server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jackson Bierfeldt",
   "license": "ISC",
   "dependencies": {
     "@gameroom-js/client": "^0.1.2",
+    "@gameroom-js/server": "^0.1.0",
     "express": "^4.18.1",
     "socket.io": "^4.5.2"
   },

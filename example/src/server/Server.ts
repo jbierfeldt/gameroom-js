@@ -1,4 +1,4 @@
-import { ConnectionController } from "../../server/dist";
+import { ConnectionController } from "@gameroom-js/server";
 import express from "express";
 import { ExampleGameRoom } from "./ExampleGameRoom";
 import * as path from "path";

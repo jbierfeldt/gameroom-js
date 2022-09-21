@@ -1,5 +1,5 @@
-import { GameRoom } from "../../server/dist";
-import { ClientController } from "../../server/dist";
+import { GameRoom } from "@gameroom-js/server";
+import { ClientController } from "@gameroom-js/server";
 
 export class ExampleGameRoom extends GameRoom {
   protected turnNumber: number;
