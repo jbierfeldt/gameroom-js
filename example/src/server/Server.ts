@@ -20,6 +20,6 @@ app.use("/", express.static(path.join(__dirname, "../../dist")));
 const connection = new ConnectionController(server);
 connection.init();
 
-connection.createGameRoom(ExampleGameRoom, "Lobby");
+connection.createGameRoom(ExampleGameRoom);
 
 app.set("ConnectionController", connection);

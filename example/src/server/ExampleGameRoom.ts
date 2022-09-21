@@ -1,14 +1,14 @@
 // import { GameRoom } from "@gameroom-js/server";
 // import { ClientController } from "@gameroom-js/server";
-import { GameRoom } from "../../../packages/server/dist";
+import { GameRoom, GameRoomOptions } from "../../../packages/server/dist";
 import { ClientController } from "../../../packages/server/dist";
 
 export class ExampleGameRoom extends GameRoom {
   private gameState: { turnNumber: number; totalClientsConnected: number };
   private clientNames: Map<string, string>;
 
-  constructor(id?: string) {
-    super(id);
+  constructor(options: GameRoomOptions) {
+    super(options);
 
     this.connectedClients = new Map();
 

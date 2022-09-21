@@ -9,7 +9,8 @@ export enum GameRoomState {
 }
 
 export interface GameRoomOptions {
-  autoDispose?: boolean;
+  id: string;
+  autoDispose: boolean;
 }
 
 export abstract class GameRoom {
@@ -39,12 +40,21 @@ export abstract class GameRoom {
     [messageType: string]: (client: ClientController, payload?: any) => void;
   };
 
-  constructor(id?: string, { autoDispose = true }: GameRoomOptions = {}) {
-    this.id = id || createID(5);
+  constructor(options: Partial<GameRoomOptions> = {}) {
+    // default options
+    const opts = Object.assign(
+      {
+        id: createID(5),
+        autoDispose: false,
+      },
+      options
+    );
+
+    this.id = opts.id;
     this.connectedClients = new Map();
     this.gameRoomState = GameRoomState.CREATING;
 
-    this.autoDispose = autoDispose;
+    this.autoDispose = opts.autoDispose;
 
     this._autoDisposeTimeout = undefined;
 
