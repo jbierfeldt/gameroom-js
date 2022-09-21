@@ -1,12 +1,14 @@
 import { nanoid } from "nanoid";
 import { Socket } from "socket.io";
 import { SocketPlus } from "./types";
+import { createID } from "./utilities";
 
 export enum ClientStates {
   JOINING,
   JOINED,
   RECONNECTING,
   LEAVING,
+  REJECTED,
 }
 
 export class ClientController {
@@ -45,11 +47,7 @@ export class ClientController {
     this.socket.emit("INITIATE_JOIN");
   };
 
-  public getUserID = (): string => {
-    if (this.socket.userID) {
-      return this.socket.userID;
-    } else {
-      return "";
-    }
+  public getClientID = (): string => {
+    return this.id;
   };
 }

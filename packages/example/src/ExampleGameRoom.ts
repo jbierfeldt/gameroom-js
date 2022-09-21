@@ -4,12 +4,17 @@ import { ClientController } from "../../server/src";
 export class ExampleGameRoom extends GameRoom {
   protected turnNumber: number;
 
+  private gameState: { turnNumber: number; totalClientsConnected: number };
+
   constructor(id?: string) {
     super(id);
 
     this.connectedClients = new Map();
 
-    this.turnNumber = 0;
+    this.gameState = {
+      turnNumber: 0,
+      totalClientsConnected: 0,
+    };
   }
 
   async onCreate(): Promise<any> {
@@ -23,9 +28,17 @@ export class ExampleGameRoom extends GameRoom {
       }
     );
 
+    this.onMessage("testMessage", () => {
+      console.log("got test message");
+    });
+
     // register action listeners
     this.onAction("nextTurnPressed", () => {
       this.advanceTurn();
+    });
+
+    this.onAction("printClients", () => {
+      console.log(this.connectedClients);
     });
 
     this._events.on("ClientStateChange", () => {
@@ -33,11 +46,11 @@ export class ExampleGameRoom extends GameRoom {
     });
 
     this._events.on("RoomStateChange", () => {
-      // this.broadcastRoomState();
+      this.onRoomStateChange();
     });
 
-    this._events.on("GameStateChange", async (): Promise<any> => {
-      await this.onGameStateChange();
+    this._events.on("GameStateChange", () => {
+      this.onGameStateChange();
     });
   }
 
@@ -52,6 +65,7 @@ export class ExampleGameRoom extends GameRoom {
 
   onJoined = async (client: ClientController): Promise<any> => {
     console.log(`[SubPredGameCon - ${this.id}]\n\tNew Player ${client.id}`);
+    this.gameState.totalClientsConnected++;
     this._events.emit("RoomStateChange");
   };
 
@@ -59,12 +73,6 @@ export class ExampleGameRoom extends GameRoom {
     // great place to store information in database as gameroom is shut down
     this.endGame();
     console.log(`[SubPredGameCon - ${this.id}]\n\tDisposing Game ${this.id}`);
-  };
-
-  // called when a player actually leaves the game (is kicked)
-  // after the game has already started
-  onPlayerLeave = (player: string): void => {
-    this._events.emit("RoomStateChange");
   };
 
   async startGame(): Promise<any> {
@@ -82,19 +90,27 @@ export class ExampleGameRoom extends GameRoom {
 
   // extended in subclass
   advanceTurn(): void {
-    this.turnNumber++;
-    this._events.emit("RoomStateChange");
+    this.gameState.turnNumber++;
+    this._events.emit("GameStateChange");
   }
+
+  getRoomState = () => {
+    return {
+      numberOfConnectedPlayers: this.connectedClients.size,
+    };
+  };
+
+  getGameState = () => {
+    return this.gameState;
+  };
 
   onGameStateChange = () => {
     console.log("game state changed");
+    this.broadcastGameState();
   };
 
   onRoomStateChange = () => {
     console.log("room state changed");
-  };
-
-  onClientStateChange = () => {
-    console.log("client state changed");
+    this.broadcastRoomState();
   };
 }

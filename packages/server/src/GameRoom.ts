@@ -70,6 +70,8 @@ export abstract class GameRoom {
     // by default, accept all clients unless auth logic is provided
     return true;
   }
+  public getRoomState?(): unknown;
+  public getGameState?(): unknown;
 
   // methods to register callbacks for messages, actions, and transfers
   public onMessage = (
@@ -89,6 +91,26 @@ export abstract class GameRoom {
     callback: (...args: any[]) => void
   ) => {
     this.onTransferHandlers[messageType] = callback;
+  };
+
+  public broadcastRoomState = (): void => {
+    let roomState: unknown;
+    if (this.getRoomState) {
+      roomState = this.getRoomState();
+    }
+    this.connectedClients.forEach((client) => {
+      client.send("updateRoomState", roomState);
+    });
+  };
+
+  public broadcastGameState = (): void => {
+    let gameState: unknown;
+    if (this.getGameState) {
+      gameState = this.getGameState();
+    }
+    this.connectedClients.forEach((client) => {
+      client.send("updateGameState", gameState);
+    });
   };
 
   private _init = async (): Promise<void> => {
@@ -200,7 +222,7 @@ export abstract class GameRoom {
 
       // if client authenticates, send message initiating client-side
       // join procedures. Upon successful completion of these procedures,
-      // client should send message { t: "protocol", m: "JOINED_GAME" } to server
+      // client should send message { t: "protocol", m: "FINISHED_JOINING_GAME" } to server
       client.sendJoinInitiate();
 
       // onJoin to be defined by subclass
@@ -215,14 +237,14 @@ export abstract class GameRoom {
     client.on("message", this._onMessage.bind(this, client));
   };
 
-  private _onJoined = async (client: ClientController): Promise<any> => {
+  private _onJoined = async (client: ClientController): Promise<void> => {
     console.log(
       `[GameRoom - ${this.id}]\n\tClient ${client.id} has finished joining ${this.id}`
     );
     client.clientState = ClientStates.JOINED;
 
     // add client to connectedClients
-    const clientUserID = client.getUserID();
+    const clientUserID = client.getClientID();
     if (clientUserID) this.connectedClients.set(clientUserID, client);
 
     // onJoined to be defined by subclass
@@ -250,7 +272,7 @@ export abstract class GameRoom {
       `[GameRoom - ${this.id}]\n\tClient ${client.id} is disconnecting from ${this.id}`
     );
     // remove client from connectedClients
-    const clientUserID = client.getUserID();
+    const clientUserID = client.getClientID();
     const success = this.connectedClients.delete(clientUserID);
 
     // if onLeave is defined in subclass, set the client to LEAVING and wait for it to be executed
@@ -286,8 +308,10 @@ export abstract class GameRoom {
 
     if (data && data.t) {
       if (data.t === "protocol") {
-        if (data.m === "JOINED_GAME") {
+        if (data.m === "FINISHED_JOINING_GAME") {
           this._onJoined(client);
+        } else if (data.m === "FAILED_JOINING_GAME") {
+          client.clientState = ClientStates.REJECTED;
         }
       } else if (data.t === "game") {
         const { t: messageType, m: message } = data.m;
@@ -308,7 +332,7 @@ export abstract class GameRoom {
     }
   };
 
-  private _dispose = async (): Promise<any> => {
+  private _dispose = async (): Promise<void> => {
     console.log(`[GameRoom - ${this.id}]\n\tpreparing to dispose ${this.id}`);
 
     // run game logic disposal if defined in subclass

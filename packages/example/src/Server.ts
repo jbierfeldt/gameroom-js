@@ -2,28 +2,27 @@ import { Server } from "socket.io";
 import { ConnectionController } from "../../server/src";
 import express from "express";
 import { ExampleGameRoom } from "./ExampleGameRoom";
+import * as path from "path";
+import { fileURLToPath } from "url";
+import type {
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from "../../shared/SharedTypes";
 
 const app = express();
 const port = 3000;
-
-// parse requests of content-type - application/json
-app.use(express.json());
-
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: true }));
 
 const server = app.listen(`${port}`, function () {
   console.log(`[Server]\n\tServer started on port ${port}`);
 });
 
-// simple route
-app.get("/", (req: any, res: any) => {
-  res.json({ message: "Welcome to Subject + Predicate." });
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/", express.static(path.join(__dirname, "../dist")));
 
 // SOCKET.IO
-const io = new Server(server, {
-  upgradeTimeout: 3000,
+const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
   transports: ["websocket", "polling"],
   cors: {
     methods: ["GET", "POST"],
@@ -33,6 +32,6 @@ const io = new Server(server, {
 const connection = new ConnectionController(io);
 connection.init();
 
-connection.createGameRoom(ExampleGameRoom);
+connection.createGameRoom(ExampleGameRoom, "Lobby");
 
 app.set("ConnectionController", connection);

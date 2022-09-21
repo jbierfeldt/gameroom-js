@@ -4,9 +4,10 @@ import { ClientController } from "./ClientController";
 import { SocketPlus } from "./types";
 
 type GameRoomDerived<T extends GameRoom> = {
-  new (): T;
+  new (id?: string): T;
 };
 
+// takes one argument of the socket.io instance
 export class ConnectionController {
   io: Server;
   gameRooms: Map<string, GameRoom>;
@@ -22,9 +23,7 @@ export class ConnectionController {
 
   setListeners = async (): Promise<void> => {
     this.io.on("connection", async (socket: SocketPlus): Promise<void> => {
-      console.log(
-        `\n[ConnectionHandler]\n\tUser ${socket.userID} connected as socket ${socket.id}.`
-      );
+      console.log(`\n[ConnectionController]\n\tNew socket ${socket.id}.`);
 
       const newClientController = new ClientController(socket);
       // if the socket already has a gameID that it is trying to join
@@ -73,8 +72,11 @@ export class ConnectionController {
     console.log(`[ConnectionHandler]\n\tRemoved gameRoom: ${gameRoom.id}`);
   };
 
-  createGameRoom = (gameRoom: GameRoomDerived<GameRoom>): GameRoom => {
-    const gR = new gameRoom();
+  createGameRoom = (
+    gameRoom: GameRoomDerived<GameRoom>,
+    id?: string
+  ): GameRoom => {
+    const gR = new gameRoom(id);
 
     this.registerGameRoom(gR);
 
