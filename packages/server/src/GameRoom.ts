@@ -9,8 +9,8 @@ export enum GameRoomState {
 }
 
 export interface GameRoomOptions {
-  id: string;
-  autoDispose: boolean;
+  gameRoomID?: string;
+  autoDispose?: boolean;
 }
 
 export abstract class GameRoom {
@@ -40,17 +40,17 @@ export abstract class GameRoom {
     [messageType: string]: (client: ClientController, payload?: any) => void;
   };
 
-  constructor(options: Partial<GameRoomOptions> = {}) {
+  constructor(options: GameRoomOptions = {}) {
     // default options
     const opts = Object.assign(
       {
-        id: createID(5),
+        gameRoomID: createID(5),
         autoDispose: false,
       },
       options
     );
 
-    this.id = opts.id;
+    this.id = opts.gameRoomID;
     this.connectedClients = new Map();
     this.gameRoomState = GameRoomState.CREATING;
 
@@ -129,7 +129,7 @@ export abstract class GameRoom {
       try {
         await this._dispose();
       } catch (e) {
-        console.error(e);
+        if (process.env.NODE_ENV === 'development') console.error(e);
       }
 
       // disconnect remaining listeners
@@ -194,7 +194,7 @@ export abstract class GameRoom {
         this._events.emit('ready');
         return;
       } catch (e) {
-        console.log(e);
+        if (process.env.NODE_ENV === 'development') console.log(e);
       }
     } else {
       this._events.emit('ready');
@@ -203,15 +203,17 @@ export abstract class GameRoom {
   };
 
   private _onJoin = async (client: ClientController): Promise<void> => {
-    console.log(
-      `[GameRoom - ${this.id}]\n\tClient ${client.id} is joining game ${this.id}`
-    );
+    if (process.env.NODE_ENV === 'development')
+      console.log(
+        `[${this.constructor.name} - ${this.id}]\n\tClient ${client.id} is joining game ${this.id}`
+      );
 
     // clear autoDispose timeout
     if (this._autoDisposeTimeout) {
-      console.log(
-        `[GameRoom - ${this.id}]\n\tNew client has joined the game, halting disposal timeout`
-      );
+      if (process.env.NODE_ENV === 'development')
+        console.log(
+          `[${this.constructor.name} - ${this.id}]\n\tNew client has joined the game, halting disposal timeout`
+        );
       clearTimeout(this._autoDisposeTimeout);
       this._autoDisposeTimeout = undefined;
     }
@@ -227,7 +229,10 @@ export abstract class GameRoom {
 
       if (!clientAuth) {
         client.socket.emit('JOIN_FAILED', 'Cannot authenticate room joining.');
-        console.log(`[GameRoom - ${this.id}]\n\tAuthentication failed`);
+        if (process.env.NODE_ENV === 'development')
+          console.log(
+            `[${this.constructor.name} - ${this.id}]\n\tAuthentication failed`
+          );
         throw new Error('Authentication Failed');
       }
 
@@ -241,7 +246,7 @@ export abstract class GameRoom {
         await this.onJoin(client, clientAuth);
       }
     } catch (error) {
-      console.log(error);
+      if (process.env.NODE_ENV === 'development') console.log(error);
     }
 
     // enable receiving of messages from client
@@ -249,9 +254,10 @@ export abstract class GameRoom {
   };
 
   private _onJoined = async (client: ClientController): Promise<void> => {
-    console.log(
-      `[GameRoom - ${this.id}]\n\tClient ${client.id} has finished joining ${this.id}`
-    );
+    if (process.env.NODE_ENV === 'development')
+      console.log(
+        `[${this.constructor.name} - ${this.id}]\n\tClient ${client.id} has finished joining ${this.id}`
+      );
     client.clientState = ClientStates.JOINED;
 
     // add client to connectedClients
@@ -263,7 +269,7 @@ export abstract class GameRoom {
       try {
         await this.onJoined(client);
       } catch (e) {
-        console.log(e);
+        if (process.env.NODE_ENV === 'development') console.log(e);
       }
     }
 
@@ -279,9 +285,10 @@ export abstract class GameRoom {
   };
 
   private _onLeave = async (client: ClientController): Promise<void> => {
-    console.log(
-      `[GameRoom - ${this.id}]\n\tClient ${client.id} is disconnecting from ${this.id}`
-    );
+    if (process.env.NODE_ENV === 'development')
+      console.log(
+        `[${this.constructor.name} - ${this.id}]\n\tClient ${client.id} is disconnecting from ${this.id}`
+      );
     // remove client from connectedClients
     const clientUserID = client.getClientID();
     const success = this.connectedClients.delete(clientUserID);
@@ -292,7 +299,7 @@ export abstract class GameRoom {
         client.clientState = ClientStates.LEAVING;
         await this.onLeave(client);
       } catch (e) {
-        console.log(e);
+        if (process.env.NODE_ENV === 'development') console.log(e);
       }
     }
 
@@ -301,9 +308,10 @@ export abstract class GameRoom {
     if (client.clientState !== ClientStates.RECONNECTING) {
       const shouldDispose = this._shouldDispose();
       if (shouldDispose) {
-        console.log(
-          `[GameRoom - ${this.id}]\n\tLast client has left the game, initiating disposal timeout`
-        );
+        if (process.env.NODE_ENV === 'development')
+          console.log(
+            `[${this.constructor.name} - ${this.id}]\n\tLast client has left the game, initiating disposal timeout`
+          );
         // start disposal timer
         this._resetAutoDisposeTimeout();
       }
@@ -311,11 +319,12 @@ export abstract class GameRoom {
   };
 
   private _onMessage = (client: ClientController, data?: any, cb?: any) => {
-    console.log(
-      `[GameRoom - ${this.id}]\n\t[Client ${client.id}]\n\t\t${JSON.stringify(
-        data
-      )}`
-    );
+    if (process.env.NODE_ENV === 'development')
+      console.log(
+        `[${this.constructor.name} - ${this.id}]\n\t[Client ${
+          client.id
+        }]\n\t\t${JSON.stringify(data)}`
+      );
 
     if (data && data.t) {
       if (data.t === 'protocol') {
@@ -344,14 +353,17 @@ export abstract class GameRoom {
   };
 
   private _dispose = async (): Promise<void> => {
-    console.log(`[GameRoom - ${this.id}]\n\tpreparing to dispose ${this.id}`);
+    if (process.env.NODE_ENV === 'development')
+      console.log(
+        `[${this.constructor.name} - ${this.id}]\n\tpreparing to dispose ${this.id}`
+      );
 
     // run game logic disposal if defined in subclass
     if (this.onDispose) {
       try {
         await this.onDispose();
       } catch (e) {
-        console.log(e);
+        if (process.env.NODE_ENV === 'development') console.log(e);
       }
     }
 

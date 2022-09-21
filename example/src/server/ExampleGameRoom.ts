@@ -3,25 +3,32 @@
 import { GameRoom, GameRoomOptions } from "../../../packages/server/dist";
 import { ClientController } from "../../../packages/server/dist";
 
+export interface ExampleGameRoomOptions extends GameRoomOptions {
+  secret: string;
+}
+
 export class ExampleGameRoom extends GameRoom {
-  private gameState: { turnNumber: number; totalClientsConnected: number };
+  private secret: string;
+  private gameState: { turnNumber: number; clientsEverConnected: number };
   private clientNames: Map<string, string>;
 
-  constructor(options: GameRoomOptions) {
+  constructor(options: ExampleGameRoomOptions) {
     super(options);
+
+    this.secret = options.secret;
 
     this.connectedClients = new Map();
 
     this.gameState = {
       turnNumber: 0,
-      totalClientsConnected: 0,
+      clientsEverConnected: 0,
     };
 
     this.clientNames = new Map();
   }
 
   async onCreate(): Promise<any> {
-    console.log(`[SubPredGameCon - ${this.id}]\n\tCreating room`);
+    console.log(`[${this.constructor.name} - ${this.id}]\n\tCreating room`);
 
     // send client state to client for initial loading
     this.onMessage(
@@ -72,16 +79,21 @@ export class ExampleGameRoom extends GameRoom {
 
   onJoined = async (client: ClientController): Promise<any> => {
     console.log(
-      `[SubPredGameCon - ${this.id}]\n\tNew Player ${client.getClientID()}`
+      `[${this.constructor.name} - ${
+        this.id
+      }]\n\tNew Player ${client.getClientID()} ${this.secret}`
     );
-    this.gameState.totalClientsConnected++;
+    this.gameState.clientsEverConnected++;
     this._events.emit("RoomStateChange");
+
+    // send initial gamestate
+    this.broadcastGameState();
   };
 
   onDispose = async (): Promise<any> => {
     // great place to store information in database as gameroom is shut down
     this.endGame();
-    console.log(`[SubPredGameCon - ${this.id}]\n\tDisposing Game ${this.id}`);
+    console.log(`[${this.constructor.name} - ${this.id}]\n\tDisposing Game`);
   };
 
   async startGame(): Promise<any> {
@@ -117,6 +129,7 @@ export class ExampleGameRoom extends GameRoom {
       }
     });
     return {
+      gameRoomID: this.id,
       numberOfConnectedPlayers: this.connectedClients.size,
       connectedClientsByName: connectedClientsByName,
     };
@@ -127,12 +140,11 @@ export class ExampleGameRoom extends GameRoom {
   };
 
   onGameStateChange = () => {
-    console.log("game state changed");
     this.broadcastGameState();
   };
 
   onRoomStateChange = () => {
-    console.log("room state changed");
     this.broadcastRoomState();
+    console.log(`[${this.constructor.name} - ${this.id}]\n\tRoom State Change`);
   };
 }

@@ -1,7 +1,7 @@
 // import { ConnectionController } from "@gameroom-js/server";
 import { ConnectionController } from "../../../packages/server/dist";
 import express from "express";
-import { ExampleGameRoom } from "./ExampleGameRoom";
+import { ExampleGameRoom, ExampleGameRoomOptions } from "./ExampleGameRoom";
 import * as path from "path";
 import { fileURLToPath } from "url";
 
@@ -17,9 +17,22 @@ const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "../../dist")));
 
-const connection = new ConnectionController(server);
-connection.init();
+app.get("/getGameRooms", (req, res) => {
+  res.json(connection.getGameRooms());
+});
 
-connection.createGameRoom(ExampleGameRoom);
+app.post("/makeGameRoom", (req, res) => {
+  const gR = new ExampleGameRoom({ secret: "abc" });
+  connection.registerGameRoom(gR);
+  res.status(201).end();
+});
+
+const connection = new ConnectionController(server);
+
+const gR = new ExampleGameRoom({ secret: "abc", gameRoomID: "Lobby" });
+connection.registerGameRoom(gR);
+
+const gR2 = new ExampleGameRoom({ secret: "abcde", gameRoomID: "AAAAA" });
+connection.registerGameRoom(gR2);
 
 app.set("ConnectionController", connection);

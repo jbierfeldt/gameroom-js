@@ -13,6 +13,7 @@ export interface SocketConnectionOptions {
 export class SocketConnection {
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   initiateCallback: () => (boolean | Promise<boolean>);
+  listeners: Array<[keyof ServerToClientEvents, () => void]>
 
   constructor(options: Partial<SocketConnectionOptions> = {}) {
     // default options
@@ -27,6 +28,8 @@ export class SocketConnection {
     });
 
     this.initiateCallback = opts.initiateCallback;
+
+    this.listeners = [];
 
     this.init();
   }
@@ -43,10 +46,28 @@ export class SocketConnection {
     });
   };
 
-  connect = (url: string, gameRoomID: string): void => {
-    this.socket = io(url, {
-      query: { gameID: gameRoomID },
+  connect = (options: Partial<SocketConnectionOptions>): void => {
+    const opts = Object.assign({
+      url: window.location.host,
+      gameRoomID: 'Lobby',
+      initiateCallback: () => true
+    }, options);
+
+    // disconnect first
+    this.disconnect();
+
+    // create new connection
+    this.socket = io(opts.url, {
+      query: { gameID: opts.gameRoomID },
     });
+    
+    // re-initiate
+    this.init();
+
+    // re-bind listeners
+    this.listeners.forEach(([event, listener]) => {
+      this.socket.on(event, listener);
+    })
   };
 
   on = (
@@ -56,6 +77,9 @@ export class SocketConnection {
     if (this.socket) {
       this.socket.on(event, listener);
     }
+
+    // also register listener for re-establishment during reconnect
+    this.listeners.push([event, listener]);
   };
 
   disconnect = () => {
