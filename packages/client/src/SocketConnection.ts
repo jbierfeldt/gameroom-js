@@ -4,27 +4,36 @@ import type {
   ClientToServerEvents,
 } from '../types/SharedTypes';
 
-export class SocketConnection {
-  initiateCallback: () => Promise<boolean>;
-  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
+export interface SocketConnectionOptions {
+  url: string;
+  gameRoomID: string;
+  initiateCallback: () => (boolean | Promise<boolean>)
+}
 
-  constructor(url: string, gameRoomID: string) {
-    this.socket = io(url, {
-      query: { gameID: gameRoomID },
+export class SocketConnection {
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>;
+  initiateCallback: () => (boolean | Promise<boolean>);
+
+  constructor(options: Partial<SocketConnectionOptions> = {}) {
+    // default options
+    const opts = Object.assign({
+      url: window.location.host,
+      gameRoomID: 'Lobby',
+      initiateCallback: () => true
+    }, options);
+
+    this.socket = io(opts.url, {
+      query: { gameID: opts.gameRoomID },
     });
 
-    // default
-    this.initiateCallback = async () => {
-      return true;
-    };
+    this.initiateCallback = opts.initiateCallback;
 
     this.init();
   }
 
   init = () => {
     // server will send an INITIATE_JOIN message to allow the client
-    // to run custom logic validating a join. Set this logic in the
-    // initiateCallback class property
+    // to run custom logic validating a join.
     this.socket.on('INITIATE_JOIN', async () => {
       if ((await this.initiateCallback()) === true) {
         this.send({ t: 'protocol', m: 'FINISHED_JOINING_GAME' });

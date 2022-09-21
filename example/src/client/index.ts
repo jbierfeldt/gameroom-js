@@ -1,6 +1,7 @@
-import { SocketConnection } from "@gameroom-js/client";
+// import { SocketConnection } from "@gameroom-js/client";
+import { SocketConnection } from "../../../packages/client/dist";
 
-const conn = new SocketConnection("http://localhost:3000", "Lobby");
+const conn = new SocketConnection();
 
 conn.on("updateGameState", (data: unknown) => {
   drawGameState(data);
@@ -21,6 +22,16 @@ const drawGameState = (gameState: any) => {
   gameStateWrapper.innerHTML = JSON.stringify(gameState);
 };
 
+const input = document.getElementById("name") as HTMLInputElement;
+
 document.getElementById("next-turn-button").addEventListener("click", () => {
   conn.sendAction("nextTurnPressed");
 });
+
+document
+  .getElementById("submit-form")
+  .addEventListener("submit", (e: Event) => {
+    e.preventDefault();
+    conn.sendTransfer("setClientName", input.value);
+    input.value = "";
+  });

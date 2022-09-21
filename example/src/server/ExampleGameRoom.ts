@@ -1,10 +1,11 @@
-import { GameRoom } from "@gameroom-js/server";
-import { ClientController } from "@gameroom-js/server";
+// import { GameRoom } from "@gameroom-js/server";
+// import { ClientController } from "@gameroom-js/server";
+import { GameRoom } from "../../../packages/server/dist";
+import { ClientController } from "../../../packages/server/dist";
 
 export class ExampleGameRoom extends GameRoom {
-  protected turnNumber: number;
-
   private gameState: { turnNumber: number; totalClientsConnected: number };
+  private clientNames: Map<string, string>;
 
   constructor(id?: string) {
     super(id);
@@ -15,6 +16,8 @@ export class ExampleGameRoom extends GameRoom {
       turnNumber: 0,
       totalClientsConnected: 0,
     };
+
+    this.clientNames = new Map();
   }
 
   async onCreate(): Promise<any> {
@@ -37,9 +40,13 @@ export class ExampleGameRoom extends GameRoom {
       this.advanceTurn();
     });
 
-    this.onAction("printClients", () => {
-      console.log(this.connectedClients);
-    });
+    // register transfer listeners
+    this.onTransfer(
+      "setClientName",
+      (client: ClientController, name: string) => {
+        this.registerClientName(client, name);
+      }
+    );
 
     this._events.on("ClientStateChange", () => {
       // this.broadcastRoomState();
@@ -64,7 +71,9 @@ export class ExampleGameRoom extends GameRoom {
   };
 
   onJoined = async (client: ClientController): Promise<any> => {
-    console.log(`[SubPredGameCon - ${this.id}]\n\tNew Player ${client.id}`);
+    console.log(
+      `[SubPredGameCon - ${this.id}]\n\tNew Player ${client.getClientID()}`
+    );
     this.gameState.totalClientsConnected++;
     this._events.emit("RoomStateChange");
   };
@@ -76,8 +85,6 @@ export class ExampleGameRoom extends GameRoom {
   };
 
   async startGame(): Promise<any> {
-    this.turnNumber = 1;
-
     this._events.emit("RoomStateChange");
   }
 
@@ -94,9 +101,24 @@ export class ExampleGameRoom extends GameRoom {
     this._events.emit("GameStateChange");
   }
 
+  registerClientName(client: ClientController, name: string): void {
+    this.clientNames.set(client.getClientID(), name);
+    this._events.emit("RoomStateChange");
+  }
+
   getRoomState = () => {
+    const connectedClientsByName: string[] = [];
+    this.connectedClients.forEach((client) => {
+      let clientName = this.clientNames.get(client.getClientID());
+      if (clientName) {
+        connectedClientsByName.push(clientName);
+      } else {
+        connectedClientsByName.push(client.getClientID());
+      }
+    });
     return {
       numberOfConnectedPlayers: this.connectedClients.size,
+      connectedClientsByName: connectedClientsByName,
     };
   };
 

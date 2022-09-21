@@ -1,4 +1,5 @@
-import { ConnectionController } from "@gameroom-js/server";
+// import { ConnectionController } from "@gameroom-js/server";
+import { ConnectionController } from "../../../packages/server/dist";
 import express from "express";
 import { ExampleGameRoom } from "./ExampleGameRoom";
 import * as path from "path";
@@ -14,7 +15,7 @@ const server = app.listen(`${port}`, function () {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use("/", express.static(path.join(__dirname, "../dist")));
+app.use("/", express.static(path.join(__dirname, "../../dist")));
 
 const connection = new ConnectionController(server);
 connection.init();

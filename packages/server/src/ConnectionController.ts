@@ -2,7 +2,10 @@ import { Server, ServerOptions } from "socket.io";
 import { GameRoom } from "./GameRoom";
 import { ClientController } from "./ClientController";
 import { SocketPlus } from "./types";
+
 import type {ClientToServerEvents, ServerToClientEvents} from "../types/SharedTypes"
+import type http from "http";
+import type https from "https";
 
 type GameRoomDerived<T extends GameRoom> = {
   new (id?: string): T;
@@ -13,7 +16,7 @@ export class ConnectionController {
   io: Server;
   gameRooms: Map<string, GameRoom>;
 
-  constructor(EXPRESS_SERVER: any, SOCKETIO_OPTIONS?: ServerOptions) {
+  constructor(EXPRESS_SERVER: http.Server | https.Server, SOCKETIO_OPTIONS?: ServerOptions) {
     this.io = new Server<ClientToServerEvents, ServerToClientEvents>(EXPRESS_SERVER, SOCKETIO_OPTIONS);
     this.gameRooms = new Map();
   }
