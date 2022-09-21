@@ -1,6 +1,7 @@
-import { nanoid } from 'nanoid';
-import { Socket } from 'socket.io';
-import { SocketPlus } from './types';
+import { nanoid } from "nanoid";
+import { Socket } from "socket.io";
+import { SocketPlus } from "./types";
+import { createID } from "./utilities";
 
 export enum ClientStates {
   JOINING,
@@ -43,7 +44,7 @@ export class ClientController {
 
   public sendJoinInitiate = (): void => {
     // method to send message to client that joining has been initiated
-    this.socket.emit('INITIATE_JOIN');
+    this.socket.emit("INITIATE_JOIN");
   };
 
   public getClientID = (): string => {

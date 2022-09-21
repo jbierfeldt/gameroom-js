@@ -1,8 +1,8 @@
 import { io, Socket } from 'socket.io-client';
-import {
+import type {
   ServerToClientEvents,
   ClientToServerEvents,
-} from '../../shared/SharedTypes';
+} from '../types/SharedTypes';
 
 export class SocketConnection {
   initiateCallback: () => Promise<boolean>;

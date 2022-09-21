@@ -1,20 +1,19 @@
-import { Server, ServerOptions } from "socket.io";
+import { Server } from "socket.io";
 import { GameRoom } from "./GameRoom";
 import { ClientController } from "./ClientController";
 import { SocketPlus } from "./types";
-import type {ClientToServerEvents, ServerToClientEvents} from "../types/SharedTypes"
 
 type GameRoomDerived<T extends GameRoom> = {
   new (id?: string): T;
 };
 
-// takes one argument of express server
+// takes one argument of the socket.io instance
 export class ConnectionController {
   io: Server;
   gameRooms: Map<string, GameRoom>;
 
-  constructor(EXPRESS_SERVER: any, SOCKETIO_OPTIONS?: ServerOptions) {
-    this.io = new Server<ClientToServerEvents, ServerToClientEvents>(EXPRESS_SERVER, SOCKETIO_OPTIONS);
+  constructor(IO_INSTANCE: Server) {
+    this.io = IO_INSTANCE;
     this.gameRooms = new Map();
   }
 

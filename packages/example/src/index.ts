@@ -1,4 +1,4 @@
-import { SocketConnection } from "../../client/src";
+import { SocketConnection } from "@gameroom-js/client";
 
 const conn = new SocketConnection("http://localhost:3000", "Lobby");
 

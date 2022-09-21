@@ -1,6 +1,6 @@
-import { createID } from './utilities';
-import { ClientController, ClientStates } from './ClientController';
-import { EventEmitter } from 'events';
+import { createID } from "./utilities";
+import { ClientController, ClientStates } from "./ClientController";
+import { EventEmitter } from "events";
 
 export enum GameRoomState {
   CREATING,
@@ -66,8 +66,7 @@ export abstract class GameRoom {
   public onJoined?(client: ClientController): void | Promise<void>;
   public onLeave?(client: ClientController): void | Promise<void>;
   public onDispose?(): void | Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onAuth(_client: ClientController): boolean | Promise<boolean> {
+  public onAuth(client: ClientController): boolean | Promise<boolean> {
     // by default, accept all clients unless auth logic is provided
     return true;
   }
@@ -99,8 +98,8 @@ export abstract class GameRoom {
     if (this.getRoomState) {
       roomState = this.getRoomState();
     }
-    this.connectedClients.forEach(client => {
-      client.send('updateRoomState', roomState);
+    this.connectedClients.forEach((client) => {
+      client.send("updateRoomState", roomState);
     });
   };
 
@@ -109,13 +108,13 @@ export abstract class GameRoom {
     if (this.getGameState) {
       gameState = this.getGameState();
     }
-    this.connectedClients.forEach(client => {
-      client.send('updateGameState', gameState);
+    this.connectedClients.forEach((client) => {
+      client.send("updateGameState", gameState);
     });
   };
 
   private _init = async (): Promise<void> => {
-    this._events.once('dispose', async () => {
+    this._events.once("dispose", async () => {
       try {
         await this._dispose();
       } catch (e) {
@@ -123,16 +122,16 @@ export abstract class GameRoom {
       }
 
       // disconnect remaining listeners
-      this._events.emit('disconnect');
+      this._events.emit("disconnect");
     });
 
-    this._events.once('ready', () => {
+    this._events.once("ready", () => {
       this.gameRoomState = GameRoomState.READY;
 
       // if game has any queued calls that were queud before it finished creating, execute
       // those now
       if (this._callQueue.length > 0) {
-        this._callQueue.forEach(call => {
+        this._callQueue.forEach((call) => {
           call();
         });
         // clear call queue
@@ -140,7 +139,7 @@ export abstract class GameRoom {
       }
     });
 
-    this._events.on('clientJoin', (client: ClientController) => {
+    this._events.on("clientJoin", (client: ClientController) => {
       if (this.gameRoomState !== GameRoomState.READY) {
         this._callQueue.push(this._onJoin.bind(this, client));
       } else {
@@ -148,7 +147,7 @@ export abstract class GameRoom {
       }
     });
 
-    this._events.on('clientLeave', (client: ClientController) => {
+    this._events.on("clientLeave", (client: ClientController) => {
       if (this.gameRoomState !== GameRoomState.READY) {
         this._callQueue.push(this._onLeave.bind(this, client));
       } else {
@@ -163,14 +162,14 @@ export abstract class GameRoom {
     }
 
     // register generic message listener for actions
-    this.onMessage('action', (client: ClientController, message: any) => {
+    this.onMessage("action", (client: ClientController, message: any) => {
       if (this.onActionHandlers[message]) {
         this.onActionHandlers[message](client, message);
       }
     });
 
     // register generic message listener for transfers
-    this.onMessage('transfer', (client: ClientController, data: any) => {
+    this.onMessage("transfer", (client: ClientController, data: any) => {
       const { t: transferType, m: payload } = data;
       if (this.onTransferHandlers[transferType]) {
         this.onTransferHandlers[transferType](client, payload);
@@ -181,13 +180,13 @@ export abstract class GameRoom {
     if (this.onCreate) {
       try {
         await this.onCreate();
-        this._events.emit('ready');
+        this._events.emit("ready");
         return;
       } catch (e) {
         console.log(e);
       }
     } else {
-      this._events.emit('ready');
+      this._events.emit("ready");
       return;
     }
   };
@@ -207,18 +206,18 @@ export abstract class GameRoom {
     }
 
     // bind clean-up callback when client connection closes
-    client.socket['onLeave'] = () => {
-      this._events.emit('clientLeave', client);
+    client.socket["onLeave"] = () => {
+      this._events.emit("clientLeave", client);
     };
-    client.socket.once('disconnect', client.socket['onLeave']);
+    client.socket.once("disconnect", client.socket["onLeave"]);
 
     try {
       const clientAuth = await this.onAuth(client);
 
       if (!clientAuth) {
-        client.socket.emit('JOIN_FAILED', 'Cannot authenticate room joining.');
+        client.socket.emit("JOIN_FAILED", "Cannot authenticate room joining.");
         console.log(`[GameRoom - ${this.id}]\n\tAuthentication failed`);
-        throw new Error('Authentication Failed');
+        throw new Error("Authentication Failed");
       }
 
       // if client authenticates, send message initiating client-side
@@ -235,7 +234,7 @@ export abstract class GameRoom {
     }
 
     // enable receiving of messages from client
-    client.on('message', this._onMessage.bind(this, client));
+    client.on("message", this._onMessage.bind(this, client));
   };
 
   private _onJoined = async (client: ClientController): Promise<void> => {
@@ -260,7 +259,7 @@ export abstract class GameRoom {
     // if client has any queued messages that were sent before it finished joining, send
     // those now
     if (client._messageQueue.length > 0) {
-      client._messageQueue.forEach(queuedMessage =>
+      client._messageQueue.forEach((queuedMessage) =>
         client.send(queuedMessage.message, queuedMessage.args, queuedMessage.cb)
       );
       // clear message queue
@@ -308,13 +307,13 @@ export abstract class GameRoom {
     );
 
     if (data && data.t) {
-      if (data.t === 'protocol') {
-        if (data.m === 'FINISHED_JOINING_GAME') {
+      if (data.t === "protocol") {
+        if (data.m === "FINISHED_JOINING_GAME") {
           this._onJoined(client);
-        } else if (data.m === 'FAILED_JOINING_GAME') {
+        } else if (data.m === "FAILED_JOINING_GAME") {
           client.clientState = ClientStates.REJECTED;
         }
-      } else if (data.t === 'game') {
+      } else if (data.t === "game") {
         const { t: messageType, m: message } = data.m;
         if (this.onMessageHandlers[messageType]) {
           this.onMessageHandlers[messageType](client, message, cb);
@@ -357,7 +356,7 @@ export abstract class GameRoom {
   ): void => {
     this._autoDisposeTimeout = setTimeout(() => {
       this._autoDisposeTimeout = undefined;
-      this._events.emit('dispose');
+      this._events.emit("dispose");
     }, time);
   };
 
@@ -372,7 +371,7 @@ export abstract class GameRoom {
 
     this._autoDisposeTimeout = setTimeout(() => {
       this._autoDisposeTimeout = undefined;
-      this._events.emit('dispose');
+      this._events.emit("dispose");
     }, time);
   };
 }

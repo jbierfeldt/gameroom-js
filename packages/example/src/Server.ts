@@ -1,13 +1,8 @@
-import { Server } from "socket.io";
-import { ConnectionController } from "../../server/src";
+import { ConnectionController } from "../../server/dist";
 import express from "express";
 import { ExampleGameRoom } from "./ExampleGameRoom";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import type {
-  ClientToServerEvents,
-  ServerToClientEvents,
-} from "../../shared/SharedTypes";
 
 const app = express();
 const port = 3000;
@@ -21,15 +16,7 @@ const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "../dist")));
 
-// SOCKET.IO
-const io = new Server<ClientToServerEvents, ServerToClientEvents>(server, {
-  transports: ["websocket", "polling"],
-  cors: {
-    methods: ["GET", "POST"],
-  },
-});
-
-const connection = new ConnectionController(io);
+const connection = new ConnectionController(server);
 connection.init();
 
 connection.createGameRoom(ExampleGameRoom, "Lobby");

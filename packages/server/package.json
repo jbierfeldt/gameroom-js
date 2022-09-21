@@ -1,16 +1,58 @@
 {
-  "name": "@gameroom-js/server",
-  "version": "0.0.1",
-  "description": "A simply library for creating socketed multiplayer game rooms.",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
   },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build --target node",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build --target node",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "@gameroom-js/server",
   "author": "Jackson Bierfeldt",
-  "license": "ISC",
+  "module": "dist/server.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/server.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/server.esm.js",
+      "limit": "10 KB"
+    }
+  ],
   "dependencies": {
-    "nanoid": "^4.0.0",
-    "socket.io": "^4.5.2",
-    "typescript": "^4.8.3"
+    "nanoid": "^3.3.4",
+    "socket.io": "^4.5.2"
+  },
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^8.1.0",
+    "husky": "^8.0.1",
+    "size-limit": "^8.1.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.4.0",
+    "typescript": "^3.9.10"
   }
 }
