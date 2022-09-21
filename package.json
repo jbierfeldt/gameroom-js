@@ -1,5 +1,5 @@
 {
-  "name": "@gameroom-js/repo",
+  "name": "@gameroom-js/monorepo",
   "version": "0.0.1",
   "description": "A simply library for creating socketed multiplayer game rooms.",
   "scripts": {
@@ -7,7 +7,7 @@
   },
   "type": "module",
   "author": "Jackson Bierfeldt",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",

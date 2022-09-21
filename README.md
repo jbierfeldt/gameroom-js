@@ -1,0 +1,1 @@
+A simply library for creating socketed multiplayer game rooms.
