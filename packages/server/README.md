@@ -71,7 +71,7 @@ export class MyGameRoom extends GameRoom {
 
   // custom methods with game/application logic
   // nextTurn(): void {}
-  // registerClientName: void {}
+  // registerClientName(client, newName): void {}
   // ...
 ```
 
