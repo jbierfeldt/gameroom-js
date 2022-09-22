@@ -93,16 +93,39 @@ All of these listeners should be registered during the `onCreate` lifecycle meth
 ```typescript
 async onCreate(): Promise<void> {
   // do listener setup in onCreate
-  this.onMessage() 
-  this.onAction()
-  this.onTransfer()
-  this.onEvent()
+  this.onProtocol(protocolType, listener);
+  this.onAction(actionType, listener);
+  this.onTransfer(transferType, listener);
+  this.onEvent(eventName, listener);
 }
 ```
 
-### Client Events
+### Events from the client
 
 The gameroom-js client can send three types of event: `Protocol`, `Action`, and `Transfer`.
 
-- `Message` is a generic event that contains
+- `Protocol` is an event meant to communicate with the server for purposes of handshaking,authentication, or information requests that are separate from game logic. Event includes a `protocolType` string. `Protocol` event listeners are registered via the `onProtocol(protocolType, listener)` method.
+- `Action` is an event meant to communicate user interactions to the server. Button presses, clicks, and other interactions with the game or application should be sent as action events. Event includes a `actionType` string. `Action` event listeners are registered via the `onAction(actionType, listener)` method.
+- `Transfer` is an event that communicates a piece of information (serialized as a string) to the server. Event includes a `transferType` string as well as a `payload` string. `Transfer` event listeners are registered via the `onTransfer(transferType, listener)` method.
 
+When handling the events via their respective methods, the `clientController` which initiated the event is always sent to the listener as the first argument. This can be used to validate the event or to associate information with a particular client.
+
+```typescript
+this.onProtocol("REQUEST_CLIENT_STATE", (client: ClientController) => {
+  client.send("updateClientState", client.getClientState());
+});
+
+this.onAction("nextTurnPressed", (client: ClientController) => {
+  if (client.getClientID() === this.playerWithTurn) {
+    this.advanceTurn();
+  }
+});
+
+this.onTransfer("updateClientName", (client: ClientController, newName: string) => {
+  this.updateClientName(client, newName);
+});
+```
+
+### Events from the server
+
+The gameroom-js server communicates internally via an `Event` system. Listeners are registered with the `onEvent(eventName, listener)` method. `Events` can be emitted via the `emitEvent(eventName, ...args)` method.

@@ -1,17 +1,17 @@
 export interface ServerToClientEvents {
+  [key: string]: (data: unknown) => void;
   updateRoomState: (data: unknown) => void;
   updateGameState: (data: unknown) => void;
-  test: (data: string) => void;
-  INITIATE_JOIN: () => void;
+  updateClientState: (data: unknown) => void;
 }
 
 export interface ClientToServerEvents {
-  message: (a?: GameMessage | ProtocolMessage) => void;
+  message: (t?: GameMessage | ProtocolMessage) => void;
 }
 
 type ProtocolMessage = {
   t: 'protocol';
-  m: 'FINISHED_JOINING_GAME' | 'FAILED_JOINING_GAME';
+  m: string;
 };
 
 type GameMessage = {

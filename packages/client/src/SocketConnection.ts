@@ -16,7 +16,7 @@ export interface SocketConnectionOptions {
 export class SocketConnection {
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   initiateCallback: () => (boolean | Promise<boolean>);
-  listeners: Array<[keyof ServerToClientEvents, () => void]>
+  listeners: Array<[string, () => void]>
 
   constructor(options: Partial<SocketConnectionOptions> = {}) {
     // default options
@@ -40,7 +40,7 @@ export class SocketConnection {
   init = () => {
     // server will send an INITIATE_JOIN message to allow the client
     // to run custom logic validating a join.
-    this.socket.on('INITIATE_JOIN', async () => {
+    this.on('INITIATE_JOIN', async () => {
       if ((await this.initiateCallback()) === true) {
         this.sendProtocol('FINISHED_JOINING_GAME');
       } else {
@@ -82,11 +82,11 @@ export class SocketConnection {
    * Registers the `listener` function as an event listener for `event`.
    * Also stores the `listener` function for re-registration during
    * a reconnection event.
-   * @param  {keyofServerToClientEvents} event
+   * @param  {keyof ServerToClientEvents} event
    * @param  {(data?:unknown)=>void} listener
    */
   on = (
-    event: keyof ServerToClientEvents,
+    event: string,
     listener: (data?: unknown) => void
   ) => {
     if (this.socket) {
@@ -110,36 +110,36 @@ export class SocketConnection {
   
   /**
    * Sends a `Protocol` event.
-   * @param  {string} protocolMessage
+   * @param  {string} protocolType
    */
-  sendProtocol = (protocolMessage: string) => {
-    this.socket.emit('message', <ProtocolMessage>{ t: 'protocol', m: protocolMessage});
+  sendProtocol = (protocolType: string) => {
+    this.socket.emit('message', <ProtocolMessage>{ t: 'protocol', m: protocolType});
   };
   
   /**
    * Sends an `Action` event.
-   * @param  {string} action
+   * @param  {string} actionType
    */
-  sendAction = (action: string) => {
+  sendAction = (actionType: string) => {
     this.socket.emit('message', {
       t: 'game',
-      m: <ActionMessage>{ t: 'action', m: action },
+      m: <ActionMessage>{ t: 'action', m: actionType },
     });
   };
   
   /**
    * Sends a `Transfer` event.
-   * @param  {string} name
-   * @param  {any} data
+   * @param  {string} transferType
+   * @param  {any} payload
    */
-  sendTransfer = (name: string, data: any) => {
+  sendTransfer = (transferType: string, payload: any) => {
     this.socket.emit('message', {
       t: 'game',
       m: <TransferMessage>{
         t: 'transfer',
         m: {
-          t: name,
-          m: data,
+          t: transferType,
+          m: payload,
         },
       },
     });

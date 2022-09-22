@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { Socket } from 'socket.io';
 import { SocketPlus } from './types';
 
-export enum ClientStates {
+export enum ClientStatus {
   JOINING,
   JOINED,
   RECONNECTING,
@@ -10,25 +10,29 @@ export enum ClientStates {
   REJECTED,
 }
 
+export interface ClientState {
+  clientStatus: ClientStatus;
+}
+
 export class ClientController {
   id: string;
   socket: SocketPlus;
-  clientState: ClientStates;
+  clientStatus: ClientStatus;
   _messageQueue: Array<any>;
 
   constructor(socket: Socket) {
     this.id = nanoid();
     this.socket = socket;
-    this.clientState = ClientStates.JOINING;
+    this.clientStatus = ClientStatus.JOINING;
     this._messageQueue = [];
   }
 
   public send = (message: string, args?: any, cb?: any): void => {
-    // if clientState is still joining, client may not
+    // if clientStatus is still joining, client may not
     // be ready to receive messages. Queue them up and
     // dispatch them after JOINED has been sent
 
-    if (this.clientState === ClientStates.JOINING) {
+    if (this.clientStatus === ClientStatus.JOINING) {
       this._messageQueue.push({ message: message, args: args, cb: cb });
       return;
     }
@@ -48,5 +52,9 @@ export class ClientController {
 
   public getClientID = (): string => {
     return this.id;
+  };
+
+  public getClientState = (): ClientState => {
+    return { clientStatus: this.clientStatus };
   };
 }

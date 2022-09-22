@@ -47,15 +47,8 @@ export class ExampleGameRoom extends GameRoom {
     console.log(`[${this.constructor.name} - ${this.id}]\n\tCreating room`);
 
     // send client state to client for initial loading
-    this.onMessage(
-      "requestClientState",
-      (client: ClientController, message: any, ack: any) => {
-        ack(console.log(client));
-      }
-    );
-
-    this.onMessage("testMessage", () => {
-      console.log("got test message");
+    this.onProtocol("REQUEST_CLIENT_STATE", (client: ClientController) => {
+      client.send("updateClientState", client.getClientID());
     });
 
     // register action listeners
@@ -70,10 +63,6 @@ export class ExampleGameRoom extends GameRoom {
         this.registerClientName(client, name);
       }
     );
-
-    this.onEvent("ClientStateChange", () => {
-      // this.broadcastRoomState();
-    });
 
     this.onEvent("RoomStateChange", () => {
       this.onRoomStateChange();

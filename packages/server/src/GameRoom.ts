@@ -1,5 +1,5 @@
 import { createID } from './utilities';
-import { ClientController, ClientStates } from './ClientController';
+import { ClientController, ClientStatus } from './ClientController';
 import { EventEmitter } from 'events';
 
 export enum GameRoomStatus {
@@ -33,20 +33,19 @@ export abstract class GameRoom {
   private onMessageHandlers: {
     [messageType: string]: (
       client: ClientController,
-      message: any,
+      payload: any,
       cb?: any
     ) => void;
   };
 
   protected onProtocolHandlers: {
-    [messageType: string]: (
-      client: ClientController,
-      message?: any,
-      cb?: any
-    ) => void;
+    [messageType: string]: (client: ClientController) => void;
   };
   protected onActionHandlers: {
-    [messageType: string]: (client: ClientController, message?: any) => void;
+    [messageType: string]: (
+      client: ClientController,
+      actionType: string
+    ) => void;
   };
   protected onTransferHandlers: {
     [messageType: string]: (client: ClientController, payload?: any) => void;
@@ -97,31 +96,24 @@ export abstract class GameRoom {
   public getRoomState?(): RoomState;
   public getGameState?(): GameState;
 
-  public onMessage = (
-    messageType: string | number,
-    callback: (...args: any[]) => void
-  ) => {
-    this.onMessageHandlers[messageType] = callback;
-  };
-
-  // methods to register callbacks for protocol messages, actions, and transfers
+  // methods to register listeners for protocol messages, actions, and transfers
   public onProtocol = (
-    messageType: string | number,
-    callback: (...args: any[]) => void
+    protocolType: string,
+    listener: (...args: any[]) => void
   ) => {
-    this.onProtocolHandlers[messageType] = callback;
+    this.onProtocolHandlers[protocolType] = listener;
   };
   public onAction = (
-    messageType: string | number,
-    callback: (...args: any[]) => void
+    actionType: string,
+    listener: (...args: any[]) => void
   ) => {
-    this.onActionHandlers[messageType] = callback;
+    this.onActionHandlers[actionType] = listener;
   };
   public onTransfer = (
-    messageType: string | number,
-    callback: (...args: any[]) => void
+    transferType: string,
+    listener: (...args: any[]) => void
   ) => {
-    this.onTransferHandlers[messageType] = callback;
+    this.onTransferHandlers[transferType] = listener;
   };
 
   // register listeners for events
@@ -205,19 +197,44 @@ export abstract class GameRoom {
       this._setInitialAutoDisposeTimeout();
     }
 
-    // register generic message listener for actions
-    this.onMessage('action', (client: ClientController, message: any) => {
-      if (this.onActionHandlers[message]) {
-        this.onActionHandlers[message](client, message);
+    // register generic protocol message listener for protocol messages
+    this.registerMessageHandler(
+      'protocol',
+      (client: ClientController, protocolType: string) => {
+        if (this.onProtocolHandlers[protocolType]) {
+          this.onProtocolHandlers[protocolType](client);
+        }
       }
-    });
+    );
+
+    // register generic message listener for actions
+    this.registerMessageHandler(
+      'action',
+      (client: ClientController, actionType: string) => {
+        if (this.onActionHandlers[actionType]) {
+          this.onActionHandlers[actionType](client, actionType);
+        }
+      }
+    );
 
     // register generic message listener for transfers
-    this.onMessage('transfer', (client: ClientController, data: any) => {
-      const { t: transferType, m: payload } = data;
-      if (this.onTransferHandlers[transferType]) {
-        this.onTransferHandlers[transferType](client, payload);
+    this.registerMessageHandler(
+      'transfer',
+      (client: ClientController, data: { t: string; m: string }) => {
+        const { t: transferType, m: payload } = data;
+        if (this.onTransferHandlers[transferType]) {
+          this.onTransferHandlers[transferType](client, payload);
+        }
       }
+    );
+
+    // register basic protocol message listeners
+    this.onProtocol('FINISHED_JOINING_GAME', (client: ClientController) => {
+      this._onJoined(client);
+    });
+
+    this.onProtocol('FAILED_JOINING_GAME', (client: ClientController) => {
+      client.clientStatus = ClientStatus.REJECTED;
     });
 
     // run onCreate method (if defined by subclass) to register onMessageHandler events
@@ -291,7 +308,7 @@ export abstract class GameRoom {
       console.log(
         `[${this.constructor.name} - ${this.id}]\n\tClient ${client.id} has finished joining ${this.id}`
       );
-    client.clientState = ClientStates.JOINED;
+    client.clientStatus = ClientStatus.JOINED;
 
     // add client to connectedClients
     const clientUserID = client.getClientID();
@@ -329,7 +346,7 @@ export abstract class GameRoom {
     // if onLeave is defined in subclass, set the client to LEAVING and wait for it to be executed
     if (success && this.onLeave) {
       try {
-        client.clientState = ClientStates.LEAVING;
+        client.clientStatus = ClientStatus.LEAVING;
         await this.onLeave(client);
       } catch (e) {
         if (process.env.NODE_ENV === 'development') console.log(e);
@@ -338,7 +355,7 @@ export abstract class GameRoom {
 
     // if client is not reconnecting, check to see if GameRoom is now empty
     // and should be disposed
-    if (client.clientState !== ClientStates.RECONNECTING) {
+    if (client.clientStatus !== ClientStatus.RECONNECTING) {
       const shouldDispose = this._shouldDispose();
       if (shouldDispose) {
         if (process.env.NODE_ENV === 'development')
@@ -351,7 +368,14 @@ export abstract class GameRoom {
     }
   };
 
-  private _onMessage = (client: ClientController, data?: any, cb?: any) => {
+  private registerMessageHandler = (
+    messageType: string,
+    listener: (...args: any[]) => void
+  ) => {
+    this.onMessageHandlers[messageType] = listener;
+  };
+
+  private _onMessage = (client: ClientController, data?: any) => {
     if (process.env.NODE_ENV === 'development')
       console.log(
         `[${this.constructor.name} - ${this.id}]\n\t[Client ${
@@ -360,21 +384,19 @@ export abstract class GameRoom {
       );
 
     if (data && data.t) {
+      // protocol messages
       if (data.t === 'protocol') {
-        if (data.m === 'FINISHED_JOINING_GAME') {
-          this._onJoined(client);
-        } else if (data.m === 'FAILED_JOINING_GAME') {
-          client.clientState = ClientStates.REJECTED;
+        if (this.onProtocolHandlers[data.m]) {
+          this.onProtocolHandlers[data.m](client);
         }
+        // action and transfer messages
       } else if (data.t === 'game') {
-        const { t: messageType, m: message } = data.m;
+        const { t: messageType, m: payload } = data.m;
         if (this.onMessageHandlers[messageType]) {
-          this.onMessageHandlers[messageType](client, message, cb);
+          this.onMessageHandlers[messageType](client, payload);
         }
       }
     }
-
-    if (cb) eval(cb);
   };
 
   private _shouldDispose = (): boolean => {

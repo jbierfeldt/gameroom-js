@@ -1,14 +1,19 @@
 // import { SocketConnection } from "@gameroom-js/client";
 import { SocketConnection } from "../../../packages/client/dist";
+import { ExampleGameState, ExampleRoomState } from "../server/ExampleGameRoom";
 
 const conn = new SocketConnection();
 
-conn.on("updateGameState", (data: unknown) => {
+conn.on("updateGameState", (data: ExampleGameState) => {
   drawGameState(data);
 });
 
-conn.on("updateRoomState", (data: unknown) => {
+conn.on("updateRoomState", (data: ExampleRoomState) => {
   drawRoomState(data);
+});
+
+conn.on("updateClientState", (clientID: string) => {
+  alert(`client id: ${clientID}`);
 });
 
 const roomStateWrapper = document.getElementById("room-state-wrapper");
@@ -71,9 +76,13 @@ const input = document.getElementById("name") as HTMLInputElement;
 
 document.getElementById("next-turn-button").addEventListener("click", () => {
   conn.sendAction("nextTurnPressed");
-  // @ts-ignore:
-  console.log(conn.socket._callbacks);
 });
+
+document
+  .getElementById("request-client-state-button")
+  .addEventListener("click", () => {
+    conn.sendProtocol("REQUEST_CLIENT_STATE");
+  });
 
 const getGameRooms = async () => {
   fetch("getGameRooms")
