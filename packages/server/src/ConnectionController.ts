@@ -26,6 +26,12 @@ export class ConnectionController {
     return Array.from(this.gameRooms.keys());
   }
 
+  getGameRoom = (gameRoomID: string): GameRoom | undefined => {
+    const gameRoom = this.gameRooms.get(gameRoomID);
+    if (gameRoom) return gameRoom
+    return undefined;
+  }
+
   setListeners = async (): Promise<void> => {
     this.io.on("connection", async (socket: SocketPlus): Promise<void> => {
       if (process.env.NODE_ENV === 'development') console.log(`\n[${this.constructor.name}]\n\tNew socket ${socket.id}.`);

@@ -129,3 +129,4 @@ this.onTransfer("updateClientName", (client: ClientController, newName: string) 
 ### Events from the server
 
 The gameroom-js server communicates internally via an `Event` system. Listeners are registered with the `onEvent(eventName, listener)` method. `Events` can be emitted via the `emitEvent(eventName, ...args)` method.
+
