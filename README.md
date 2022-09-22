@@ -6,7 +6,5 @@ gameroom.js is a simple library for Node and the browser that allows you to rapi
 
 gameroom.js consists of:
 
-- a Node.js server (this repository)
-- a Javascript client for the browser
-
-## Quickstart
+- [a Node.js server](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server)
+- [a Javascript client for the browser](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client)

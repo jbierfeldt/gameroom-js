@@ -28,11 +28,11 @@ export class ClientController {
   }
 
   public send = (message: string, args?: any, cb?: any): void => {
-    // if clientStatus is still joining, client may not
+    // if clientStatus is still joining or reconnecting, client may not
     // be ready to receive messages. Queue them up and
     // dispatch them after JOINED has been sent
 
-    if (this.clientStatus === ClientStatus.JOINING) {
+    if (this.clientStatus !== ClientStatus.JOINED) {
       this._messageQueue.push({ message: message, args: args, cb: cb });
       return;
     }

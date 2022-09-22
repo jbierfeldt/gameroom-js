@@ -4,6 +4,7 @@
 
 A simple library for Node.JS that allows you to rapidly develop stateful, socketed multiplayer games and web applications. For use in conjunction with the client library [@gameroom-js/client](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client).
 
+The three main classes in the gameroom-js server library are `GameRoom`, `ConnectionController`, and `ClientController`.
 
 ## Quickstart
 
@@ -25,9 +26,11 @@ const defaultGameRoom = new MyGameRoom({ gameRoomID: "Lobby" });
 connection.registerGameRoom(defaultGameRoom);
 ```
 
-## Extending the GameRoom class
+## GameRoom
 
-To add your own game/application logic to a GameRoom, just extend the `GameRoom` class.
+`GameRoom` is defined as an abstract class. In order to use it in your game or application, you need to extend it by writing your own subclass which extends it. In doing so, you'll include your own custom logic by adding class properties, methods, and registering listeners.
+
+### Extending GameRoom
 
 #### **`MyGameRoom.ts`**
 ```typescript
@@ -81,7 +84,7 @@ export interface GameRoomOptions {
 }
 ```
 
-## Events and Listeners
+### Events and Listeners
 
 ---
 
@@ -143,3 +146,45 @@ app.post("/nextTurn", (req, res) => {
   gameRoom.emitEvent("advanceTurn");
 })
 ```
+
+## ConnectionController
+
+The `ConncectionController` class handles communication between sockets and game rooms. When instantiated, it requires a reference to an http server (such as one created by Express.JS or Koa). gameroom.js uses Socket.IO for websocket communication, so `ConnectionController` optionally receives the [Socket.IO `ServerOptions` object](https://socket.io/docs/v4/server-options/).
+
+#### **`Server.ts`**
+```typescript
+import express from "express";
+import { ConnectionController } from "@gameroom-js/server";
+
+// use Express.JS or any other http server library (http, Koa, etc.) to create a server
+const app = express();
+const server = app.listen(3000);
+
+// pass the server to a new ConnectionController
+// as well as an optional Socket.IO ServerOptions object
+const connection = new ConnectionController(server, {pingTimeout: 10000});
+```
+
+The most important method of `ConnectionController` is `registerGameRoom(gameRoom)`, which registers a new `GameRoom` and allows clients to connect to it.
+
+#### **`Server.ts`**
+```typescript
+// create a GameRoom and register it with the ConnectionController
+const defaultGameRoom = new MyGameRoom({ gameRoomID: "Lobby" });
+connection.registerGameRoom(defaultGameRoom);
+```
+
+`ConnectionController` also has methods for getting references to game rooms that have already been registered.
+
+- `getGameRooms()` returns an array of the `gameRoomID`s of all registered game rooms.
+- `getGameRoom(gameRoomID)` returns the reference to the game room that matches the provided `gameRoomID`. Returns `undefined` if no matching game room is registered.
+
+## ClientController
+
+The `ClientController` class is an abstraction on top of the [Socket.IO `socket` instance](https://socket.io/docs/v4/server-api/#socket). It can be extended if you wish to store state or add custom game/application logic, although this is not recommended. (We recommend finding a way to store individual player state with the rest of the GameState, and using an authentication system to reconnect new sockets to previous state.)
+
+To send an event to an individual client, use the `send(message, args, cb)` method.
+
+You can get a client's id via the `getClientID()` method.
+
+If you are storing state in the `ClientController`, you can get this information by extending and calling the `getClientState()` method.

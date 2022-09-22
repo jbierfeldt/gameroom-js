@@ -82,9 +82,6 @@ export class ConnectionController {
   };
 
   disposeGameRoom = async (gameRoom: GameRoom): Promise<void> => {
-    // inform subscribers that game i_onMessages being deleted so they can remove their references
-
-    // actually remove reference to game
     this.gameRooms.delete(gameRoom.id);
     if (process.env.NODE_ENV === 'development') console.log(`[${this.constructor.name}]\n\tRemoved gameRoom: ${gameRoom.id}`);
   };
