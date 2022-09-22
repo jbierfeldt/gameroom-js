@@ -29,10 +29,10 @@ app.post("/makeGameRoom", (req, res) => {
 
 const connection = new ConnectionController(server);
 
-const gR = new ExampleGameRoom({ secret: "abc", gameRoomID: "Lobby" });
+const gR = new ExampleGameRoom({ gameRoomID: "Lobby" });
 connection.registerGameRoom(gR);
 
-const gR2 = new ExampleGameRoom({ secret: "abcde", gameRoomID: "AAAAA" });
+const gR2 = new ExampleGameRoom({ gameRoomID: "AAAAA" });
 connection.registerGameRoom(gR2);
 
 app.set("ConnectionController", connection);

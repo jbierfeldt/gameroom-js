@@ -104,6 +104,19 @@ export abstract class GameRoom {
     this.onTransferHandlers[messageType] = callback;
   };
 
+  // register listeners for events
+  public onEvent = (
+    eventName: string | symbol,
+    listener: (...args: any[]) => void
+  ) => {
+    this._events.on(eventName, listener);
+  };
+
+  // emit event
+  public emitEvent = (eventName: string | symbol, ...args: any) => {
+    this._events.emit(eventName, ...args);
+  };
+
   public broadcastRoomState = (): void => {
     let roomState: unknown;
     if (this.getRoomState) {

@@ -4,7 +4,7 @@ import { GameRoom, GameRoomOptions } from "../../../packages/server/dist";
 import { ClientController } from "../../../packages/server/dist";
 
 export interface ExampleGameRoomOptions extends GameRoomOptions {
-  secret: string;
+  secret?: string;
 }
 
 export class ExampleGameRoom extends GameRoom {
@@ -15,7 +15,7 @@ export class ExampleGameRoom extends GameRoom {
   constructor(options: ExampleGameRoomOptions) {
     super(options);
 
-    this.secret = options.secret;
+    this.secret = options.secret || "";
 
     this.connectedClients = new Map();
 
@@ -55,15 +55,15 @@ export class ExampleGameRoom extends GameRoom {
       }
     );
 
-    this._events.on("ClientStateChange", () => {
+    this.onEvent("ClientStateChange", () => {
       // this.broadcastRoomState();
     });
 
-    this._events.on("RoomStateChange", () => {
+    this.onEvent("RoomStateChange", () => {
       this.onRoomStateChange();
     });
 
-    this._events.on("GameStateChange", () => {
+    this.onEvent("GameStateChange", () => {
       this.onGameStateChange();
     });
   }
@@ -74,7 +74,7 @@ export class ExampleGameRoom extends GameRoom {
   };
 
   onLeave = async (client: ClientController): Promise<any> => {
-    this._events.emit("RoomStateChange");
+    this.emitEvent("RoomStateChange");
   };
 
   onJoined = async (client: ClientController): Promise<any> => {
@@ -84,7 +84,7 @@ export class ExampleGameRoom extends GameRoom {
       }]\n\tNew Player ${client.getClientID()} ${this.secret}`
     );
     this.gameState.clientsEverConnected++;
-    this._events.emit("RoomStateChange");
+    this.emitEvent("RoomStateChange");
 
     // send initial gamestate
     this.broadcastGameState();
@@ -97,7 +97,7 @@ export class ExampleGameRoom extends GameRoom {
   };
 
   async startGame(): Promise<any> {
-    this._events.emit("RoomStateChange");
+    this.emitEvent("RoomStateChange");
   }
 
   // function will include logic for generating results and storing them
@@ -110,12 +110,12 @@ export class ExampleGameRoom extends GameRoom {
   // extended in subclass
   advanceTurn(): void {
     this.gameState.turnNumber++;
-    this._events.emit("GameStateChange");
+    this.emitEvent("GameStateChange");
   }
 
   registerClientName(client: ClientController, name: string): void {
     this.clientNames.set(client.getClientID(), name);
-    this._events.emit("RoomStateChange");
+    this.emitEvent("RoomStateChange");
   }
 
   getRoomState = () => {
