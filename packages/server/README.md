@@ -4,7 +4,7 @@
 
 A simple library for Node.JS that allows you to rapidly develop stateful, socketed multiplayer games and web applications. For use in conjunction with the client library [@gameroom-js/client](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client).
 
-The three main classes in the gameroom-js server library are `GameRoom`, `ConnectionController`, and `ClientController`.
+The three main classes in the gameroom-js server library are [`GameRoom`](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server#gameroom), [`ConnectionController`](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server#connectioncontroller), and [`ClientController`](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server#clientcontroller).
 
 ## Quickstart
 
