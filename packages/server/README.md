@@ -54,10 +54,10 @@ export class MyGameRoom extends GameRoom {
   // implement the following lifecycle methods with your own logic
   async onCreate(): Promise<void> {
     // do listener setup in onCreate
-    this.onMessage() 
-    this.onAction()
-    this.onTransfer()
-    this.onEvent()
+    this.onProtocol(protocolType, listener);
+    this.onAction(actionType, listener);
+    this.onTransfer(transferType, listener);
+    this.onEvent(eventName, listener);
   }
   async onAuth(): Promise<void> {/* custom client authentication logic */}
   async onJoin(): Promise<void> {/* custom client joining logic */}
