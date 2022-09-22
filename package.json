@@ -1,7 +1,7 @@
 {
-  "name": "@gameroom-js",
+  "name": "@gameroom-js/monorepo",
   "version": "0.0.1",
-  "description": "A simply library for creating socketed multiplayer game rooms.",
+  "description": "gameroom.js is a simple library for Node and the browser that allows you to rapidly develop stateful, socketed multiplayer games and web applications.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
