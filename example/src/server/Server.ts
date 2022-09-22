@@ -17,6 +17,12 @@ const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "../../dist")));
 
+// app.post("/nextTurn", (req, res) => {
+//   const gameRoomID = req.body.gameRoomID;
+//   const gameRoom = connection.getGameRoom(gameRoomID);
+//   gameRoom.emitEvent("advanceTurn");
+// })
+
 app.get("/getGameRooms", (req, res) => {
   res.json(connection.getGameRooms());
 });

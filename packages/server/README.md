@@ -130,3 +130,16 @@ this.onTransfer("updateClientName", (client: ClientController, newName: string) 
 
 The gameroom-js server communicates internally via an `Event` system. Listeners are registered with the `onEvent(eventName, listener)` method. `Events` can be emitted via the `emitEvent(eventName, ...args)` method.
 
+Logic outside of the `GameRoom` can also access these events. A good example of this might be if your game or application has a REST API that might need to send events to the `GameRoom`:
+
+```typescript
+const app = express();
+const server = app.listen(3000);
+const connection = new ConnectionController(server);
+
+app.post("/nextTurn", (req, res) => {
+  const gameRoomID = req.body.gameRoomID;
+  const gameRoom = connection.getGameRoom(gameRoomID);
+  gameRoom.emitEvent("advanceTurn");
+})
+```
