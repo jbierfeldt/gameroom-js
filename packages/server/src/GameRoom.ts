@@ -2,7 +2,7 @@ import { createID } from './utilities';
 import { ClientController, ClientStates } from './ClientController';
 import { EventEmitter } from 'events';
 
-export enum GameRoomState {
+export enum GameRoomStatus {
   CREATING,
   READY,
   DISPOSING,
@@ -13,10 +13,14 @@ export interface GameRoomOptions {
   autoDispose?: boolean;
 }
 
+// interfaces to be extended
+export interface RoomState {}
+export interface GameState {}
+
 export abstract class GameRoom {
   public id: string;
   public connectedClients: Map<string, ClientController>;
-  public gameRoomState: GameRoomState;
+  public gameRoomStatus: GameRoomStatus;
 
   public autoDispose: boolean;
 
@@ -30,6 +34,14 @@ export abstract class GameRoom {
     [messageType: string]: (
       client: ClientController,
       message: any,
+      cb?: any
+    ) => void;
+  };
+
+  protected onProtocolHandlers: {
+    [messageType: string]: (
+      client: ClientController,
+      message?: any,
       cb?: any
     ) => void;
   };
@@ -52,7 +64,7 @@ export abstract class GameRoom {
 
     this.id = opts.gameRoomID;
     this.connectedClients = new Map();
-    this.gameRoomState = GameRoomState.CREATING;
+    this.gameRoomStatus = GameRoomStatus.CREATING;
 
     this.autoDispose = opts.autoDispose;
 
@@ -61,6 +73,8 @@ export abstract class GameRoom {
     this._callQueue = [];
 
     this.onMessageHandlers = {};
+
+    this.onProtocolHandlers = {};
     this.onActionHandlers = {};
     this.onTransferHandlers = {};
 
@@ -69,6 +83,10 @@ export abstract class GameRoom {
 
   // optional public methods to be implemented by game-specific controllers
   public onCreate?(): void | Promise<void>;
+  public onAuth(_client: ClientController): boolean | Promise<boolean> {
+    // by default, accept all clients unless auth logic is provided
+    return true;
+  }
   public onJoin?(
     client: ClientController,
     authenticated?: boolean
@@ -76,20 +94,22 @@ export abstract class GameRoom {
   public onJoined?(client: ClientController): void | Promise<void>;
   public onLeave?(client: ClientController): void | Promise<void>;
   public onDispose?(): void | Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onAuth(_client: ClientController): boolean | Promise<boolean> {
-    // by default, accept all clients unless auth logic is provided
-    return true;
-  }
-  public getRoomState?(): unknown;
-  public getGameState?(): unknown;
+  public getRoomState?(): RoomState;
+  public getGameState?(): GameState;
 
-  // methods to register callbacks for messages, actions, and transfers
   public onMessage = (
     messageType: string | number,
     callback: (...args: any[]) => void
   ) => {
     this.onMessageHandlers[messageType] = callback;
+  };
+
+  // methods to register callbacks for protocol messages, actions, and transfers
+  public onProtocol = (
+    messageType: string | number,
+    callback: (...args: any[]) => void
+  ) => {
+    this.onProtocolHandlers[messageType] = callback;
   };
   public onAction = (
     messageType: string | number,
@@ -118,7 +138,7 @@ export abstract class GameRoom {
   };
 
   public broadcastRoomState = (): void => {
-    let roomState: unknown;
+    let roomState: RoomState;
     if (this.getRoomState) {
       roomState = this.getRoomState();
     }
@@ -128,7 +148,7 @@ export abstract class GameRoom {
   };
 
   public broadcastGameState = (): void => {
-    let gameState: unknown;
+    let gameState: GameState;
     if (this.getGameState) {
       gameState = this.getGameState();
     }
@@ -150,7 +170,7 @@ export abstract class GameRoom {
     });
 
     this._events.once('ready', () => {
-      this.gameRoomState = GameRoomState.READY;
+      this.gameRoomStatus = GameRoomStatus.READY;
 
       // if game has any queued calls that were queud before it finished creating, execute
       // those now
@@ -164,7 +184,7 @@ export abstract class GameRoom {
     });
 
     this._events.on('clientJoin', (client: ClientController) => {
-      if (this.gameRoomState !== GameRoomState.READY) {
+      if (this.gameRoomStatus !== GameRoomStatus.READY) {
         this._callQueue.push(this._onJoin.bind(this, client));
       } else {
         this._onJoin(client);
@@ -172,7 +192,7 @@ export abstract class GameRoom {
     });
 
     this._events.on('clientLeave', (client: ClientController) => {
-      if (this.gameRoomState !== GameRoomState.READY) {
+      if (this.gameRoomStatus !== GameRoomStatus.READY) {
         this._callQueue.push(this._onLeave.bind(this, client));
       } else {
         this._onLeave(client);

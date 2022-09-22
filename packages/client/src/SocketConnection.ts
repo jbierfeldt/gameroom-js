@@ -2,6 +2,9 @@ import { io, Socket } from 'socket.io-client';
 import type {
   ServerToClientEvents,
   ClientToServerEvents,
+  ProtocolMessage,
+  ActionMessage,
+  TransferMessage,
 } from '../types/SharedTypes';
 
 export interface SocketConnectionOptions {
@@ -39,13 +42,18 @@ export class SocketConnection {
     // to run custom logic validating a join.
     this.socket.on('INITIATE_JOIN', async () => {
       if ((await this.initiateCallback()) === true) {
-        this.send({ t: 'protocol', m: 'FINISHED_JOINING_GAME' });
+        this.sendProtocol('FINISHED_JOINING_GAME');
       } else {
-        this.send({ t: 'protocol', m: 'FAILED_JOINING_GAME' });
+        this.sendProtocol('FAILED_JOINING_GAME');
       }
     });
   };
 
+  /**
+   * Disconnects previous socket and instantiates a new one with `options`.
+   * Re-registers all listeners stored via the `on` method.
+   * @param  {Partial<SocketConnectionOptions>} options
+   */
   connect = (options: Partial<SocketConnectionOptions>): void => {
     const opts = Object.assign({
       url: window.location.host,
@@ -70,6 +78,13 @@ export class SocketConnection {
     })
   };
 
+  /**
+   * Registers the `listener` function as an event listener for `event`.
+   * Also stores the `listener` function for re-registration during
+   * a reconnection event.
+   * @param  {keyofServerToClientEvents} event
+   * @param  {(data?:unknown)=>void} listener
+   */
   on = (
     event: keyof ServerToClientEvents,
     listener: (data?: unknown) => void
@@ -78,7 +93,6 @@ export class SocketConnection {
       this.socket.on(event, listener);
     }
 
-    // also register listener for re-establishment during reconnect
     this.listeners.push([event, listener]);
   };
 
@@ -93,24 +107,35 @@ export class SocketConnection {
       this.socket.connect();
     }
   };
-
-  send = (...args: any) => {
-    if (this.socket) {
-      this.socket.send(...args);
-    }
+  
+  /**
+   * Sends a `Protocol` event.
+   * @param  {string} protocolMessage
+   */
+  sendProtocol = (protocolMessage: string) => {
+    this.socket.emit('message', <ProtocolMessage>{ t: 'protocol', m: protocolMessage});
   };
-
+  
+  /**
+   * Sends an `Action` event.
+   * @param  {string} action
+   */
   sendAction = (action: string) => {
     this.socket.emit('message', {
       t: 'game',
-      m: { t: 'action', m: action },
+      m: <ActionMessage>{ t: 'action', m: action },
     });
   };
-
+  
+  /**
+   * Sends a `Transfer` event.
+   * @param  {string} name
+   * @param  {any} data
+   */
   sendTransfer = (name: string, data: any) => {
     this.socket.emit('message', {
       t: 'game',
-      m: {
+      m: <TransferMessage>{
         t: 'transfer',
         m: {
           t: name,

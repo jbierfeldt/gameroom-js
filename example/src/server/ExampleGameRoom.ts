@@ -1,15 +1,31 @@
 // import { GameRoom } from "@gameroom-js/server";
 // import { ClientController } from "@gameroom-js/server";
-import { GameRoom, GameRoomOptions } from "../../../packages/server/dist";
+import { GameRoom } from "../../../packages/server/dist";
+import type {
+  GameRoomOptions,
+  GameState,
+  RoomState,
+} from "../../../packages/server/dist";
 import { ClientController } from "../../../packages/server/dist";
 
 export interface ExampleGameRoomOptions extends GameRoomOptions {
   secret?: string;
 }
 
+export interface ExampleRoomState extends RoomState {
+  gameRoomID: string;
+  numberOfConnectedPlayers: number;
+  connectedClientsByName: string[];
+}
+
+export interface ExampleGameState extends GameState {
+  turnNumber: number;
+  clientsEverConnected: number;
+}
+
 export class ExampleGameRoom extends GameRoom {
   private secret: string;
-  private gameState: { turnNumber: number; clientsEverConnected: number };
+  private gameState: ExampleGameState;
   private clientNames: Map<string, string>;
 
   constructor(options: ExampleGameRoomOptions) {
@@ -118,7 +134,7 @@ export class ExampleGameRoom extends GameRoom {
     this.emitEvent("RoomStateChange");
   }
 
-  getRoomState = () => {
+  getRoomState = (): ExampleRoomState => {
     const connectedClientsByName: string[] = [];
     this.connectedClients.forEach((client) => {
       let clientName = this.clientNames.get(client.getClientID());
@@ -135,7 +151,7 @@ export class ExampleGameRoom extends GameRoom {
     };
   };
 
-  getGameState = () => {
+  getGameState = (): ExampleGameState => {
     return this.gameState;
   };
 
