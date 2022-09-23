@@ -6,8 +6,8 @@ gameroom.js is a simple library for Node and the browser that allows you to rapi
 
 gameroom.js consists of:
 
-- [@gameroom-js/server](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server) a Node.js server
-- [@gameroom-js/client](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client) a Javascript client for the browser
+- [@gameroom-js/server](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server) a Node.js server [![npm version](https://badge.fury.io/js/@gameroom-js%2Fserver.svg)](https://badge.fury.io/js/@gameroom-js%2Fserver)
+- [@gameroom-js/client](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client) a Javascript client for the browser [![npm version](https://badge.fury.io/js/@gameroom-js%2Fclient.svg)](https://badge.fury.io/js/@gameroom-js%2Fclient)
 
 ## Quickstart
 

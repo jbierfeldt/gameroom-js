@@ -1,5 +1,7 @@
 # @gameroom-js/client
 
+[![npm version](https://badge.fury.io/js/@gameroom-js%2Fclient.svg)](https://badge.fury.io/js/@gameroom-js%2Fclient)
+
 ## Overview
 
 A simple library for browser-based applications that allows you to rapidly develop stateful, socketed multiplayer games and web applications. For use in conjunction with the server library [@gameroom-js/server](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server).
