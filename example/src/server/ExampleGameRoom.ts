@@ -1,12 +1,10 @@
-// import { GameRoom } from "@gameroom-js/server";
-// import { ClientController } from "@gameroom-js/server";
-import { GameRoom } from "../../../packages/server/dist";
+import { GameRoom } from "@gameroom-js/server";
 import type {
   GameRoomOptions,
   GameState,
   RoomState,
-} from "../../../packages/server/dist";
-import { ClientController } from "../../../packages/server/dist";
+} from "@gameroom-js/server";
+import { ClientController } from "@gameroom-js/server";
 
 export interface ExampleGameRoomOptions extends GameRoomOptions {
   secret?: string;

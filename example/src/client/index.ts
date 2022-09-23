@@ -1,5 +1,4 @@
-// import { SocketConnection } from "@gameroom-js/client";
-import { SocketConnection } from "../../../packages/client/dist";
+import { SocketConnection } from "@gameroom-js/client";
 import { ExampleGameState, ExampleRoomState } from "../server/ExampleGameRoom";
 
 const conn = new SocketConnection();
