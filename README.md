@@ -9,6 +9,11 @@ gameroom.js consists of:
 - [![npm version](https://badge.fury.io/js/@gameroom-js%2Fserver.svg)](https://badge.fury.io/js/@gameroom-js%2Fserver) [@gameroom-js/server](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/server) a Node.js server 
 - [![npm version](https://badge.fury.io/js/@gameroom-js%2Fclient.svg)](https://badge.fury.io/js/@gameroom-js%2Fclient) [@gameroom-js/client](https://github.com/jbierfeldt/gameroom-js/tree/master/packages/client) a Javascript client for the browser 
 
+### Games using gameroom-js
+
+- [Subject+Predicate](https://subpred.com)
+- [Close Quarters](http://closequarters.xyz)
+
 ## Quickstart
 
 #### **`Server.ts`**
